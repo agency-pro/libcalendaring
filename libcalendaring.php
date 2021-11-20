@@ -28,6 +28,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+ ini_set('memory_limit', '2048M');
 
 class libcalendaring extends rcube_plugin
 {
@@ -307,7 +308,12 @@ class libcalendaring extends rcube_plugin
         }
 
         // abort if no valid event dates are given
-        if (!is_object($event['start']) || !is_a($event['start'], 'DateTime') || !is_object($event['end']) || !is_a($event['end'], 'DateTime')) {
+        if (
+                !is_object($event['start']) ||
+                (!is_a($event['start'], 'DateTime') && !is_a($event['start'], 'DateTimeImmutable')) ||
+                !is_object($event['end']) ||
+                (!is_a($event['end'], 'DateTime') && !is_a($event['end'], 'DateTimeImmutable'))
+            ) {
             return $fromto;
         }
 
@@ -664,7 +670,7 @@ class libcalendaring extends rcube_plugin
                 $refdate = !empty($alarm['related']) && $alarm['related'] == 'END' ? $rec['end'] : $rec['start'];
 
                 // abort if no reference date is available to compute notification time
-                if (!is_a($refdate, 'DateTime')) {
+                if (!is_a($refdate, 'DateTime') && !is_a($refdate, 'DateTimeImmutable')) {
                     continue;
                 }
 
@@ -1092,7 +1098,7 @@ class libcalendaring extends rcube_plugin
             $recurrence['RDATE'] = array_map(function($rdate) use ($tz, $start) {
                 try {
                     $dt = new DateTime($rdate, $tz);
-                    if (is_a($start, 'DateTime'))
+                    if (is_a($start, 'DateTime') || is_a($start, 'DateTimeImmutable'))
                         $dt->setTime($start->format('G'), $start->format('i'));
                     return $dt;
                 }
@@ -1272,7 +1278,7 @@ class libcalendaring extends rcube_plugin
             unset($object['_instance'], $object['recurrence_date']);
         }
         // set instance and 'savemode' according to recurrence-id
-        else if (!empty($object['recurrence_date']) && is_a($object['recurrence_date'], 'DateTime')) {
+        else if (!empty($object['recurrence_date']) && (is_a($object['recurrence_date'], 'DateTime') || is_a($object['recurrence_date'], 'DateTimeImmutable'))) {
             $object['_instance'] = self::recurrence_instance_identifier($object);
             $object['_savemode'] = $object['thisandfuture'] ? 'future' : 'current';
         }
@@ -1459,7 +1465,7 @@ class libcalendaring extends rcube_plugin
             switch ($k) {
             case 'UNTIL':
                 // convert to UTC according to RFC 5545
-                if (is_a($val, 'DateTime')) {
+                if (is_a($val, 'DateTime') || is_a($ex, 'DateTimeImmutable')) {
                     if (!$allday && empty($val->_dateonly)) {
                         $until = clone $val;
                         $until->setTimezone(new DateTimeZone('UTC'));
@@ -1473,7 +1479,7 @@ class libcalendaring extends rcube_plugin
             case 'RDATE':
             case 'EXDATE':
                 foreach ((array)$val as $i => $ex) {
-                    if (is_a($ex, 'DateTime')) {
+                    if (is_a($ex, 'DateTime') || is_a($ex, 'DateTimeImmutable')) {
                         $val[$i] = $ex->format('Ymd\THis');
                     }
                 }
