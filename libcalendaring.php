@@ -196,6 +196,11 @@ class libcalendaring extends rcube_plugin
         }
 
         if (($dt instanceof DateTime || $dt instanceof DateTimeImmutable) && empty($dt->_dateonly) && !$dateonly) {
+            if ($dt instanceof DateTimeImmutable) {
+                $timestamp = $dt->getTimestamp();
+                $dt = new DateTime();
+                $dt->setTimestamp($timestamp);
+            }
             $dt->setTimezone($this->timezone);
         }
 
@@ -1486,9 +1491,10 @@ class libcalendaring extends rcube_plugin
             switch ($k) {
             case 'UNTIL':
                 // convert to UTC according to RFC 5545
-                if (is_a($val, 'DateTime') || is_a($ex, 'DateTimeImmutable')) {
+                if (is_a($val, 'DateTime') || is_a($val, 'DateTimeImmutable')) {
                     if (!$allday && empty($val->_dateonly)) {
-                        $until = clone $val;
+                        $until = new DateTime();
+                        $until->setTimestamp($val->getTimestamp());
                         $until->setTimezone(new DateTimeZone('UTC'));
                         $val = $until->format('Ymd\THis\Z');
                     }
