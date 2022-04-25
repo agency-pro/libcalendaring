@@ -225,6 +225,11 @@ class libcalendaring_itip
                         unset($replying_attendee['rsvp']);  // unset the RSVP attribute
                     }
                 }
+                // we accept on behalf of a resource
+                else if (strcasecmp($attendee['email'], $event['_resource']) == 0) {
+                    $replying_attendee = $attendee;
+                    $replying_attendee['sent-by'] = 'mailto:' . $from_utf;
+                }
                 // include attendees relevant for delegation (RFC 5546, Section 4.2.5)
                 else if ((!empty($attendee['delegated-to']) &&
                             (strcasecmp($attendee['delegated-to'], $from) == 0 || strcasecmp($attendee['delegated-to'], $from_utf) == 0)) ||
