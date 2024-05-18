@@ -1252,7 +1252,9 @@ class libvcalendar implements Iterator
         }
 
         if (!empty($event['attendees'])) {
-            foreach ((array) $event['attendees'] as $attendee) {
+            $attendees = is_string($event['attendees']) ? json_decode($event['attendees']) : $event['attendees'];
+            foreach ($attendees as $attendee) {
+                $attendee = (array) $attendee;
                 if ($attendee['role'] == 'ORGANIZER') {
                     if (empty($event['organizer']))
                         $event['organizer'] = $attendee;
